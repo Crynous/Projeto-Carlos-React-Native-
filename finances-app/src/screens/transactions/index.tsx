@@ -1,31 +1,10 @@
+// src/screens/transactions/index.tsx
 import * as React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { Icon } from '@rneui/themed';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../navigation/AppNavigator';
+import { useTransactions, Transaction } from '../../context/TransactionContext';
 
-type TransactionsNavProp = NativeStackNavigationProp<RootStackParamList, 'Transactions'>;
-
-export default function TransactionsScreen() {
-    const navigation = useNavigation<TransactionsNavProp>();
-
-    const transactions = [
-        { id: '1', desc: 'Salário', type: 'entrada', value: 3200 },
-        { id: '2', desc: 'Supermercado', type: 'saida', value: -250 },
-        { id: '3', desc: 'Transporte', type: 'saida', value: -80 },
-        { id: '4', desc: 'Freelancer', type: 'entrada', value: 500 },
-    ];
-
-    const renderItem = ({ item }: any) => (
-        <View style={styles.item}>
-            <Icon name={item.type === 'entrada' ? 'arrow-upward' : 'arrow-downward'} color={item.type === 'entrada' ? 'green' : 'red'} />
-            <View style={styles.itemInfo}>
-                <Text style={styles.desc}>{item.desc}</Text>
-                <Text style={styles.value}>{item.value < 0 ? `- R$ ${Math.abs(item.value)}` : `R$ ${item.value}`}</Text>
-            </View>
-        </View>
-    );
+export default function Transactions() {
+    const { transactions } = useTransactions();
 
     return (
         <View style={styles.container}>
@@ -33,22 +12,40 @@ export default function TransactionsScreen() {
 
             <FlatList
                 data={transactions}
-                renderItem={renderItem}
                 keyExtractor={item => item.id}
-                contentContainerStyle={{ paddingBottom: 20 }}
+                renderItem={({ item }: { item: Transaction }) => (
+                    <View
+                        style={[
+                            styles.item,
+                            { borderLeftColor: item.type === "entrada" ? "green" : "red" }
+                        ]}
+                    >
+                        <Text style={styles.desc}>{item.desc}</Text>
+                        <Text style={[styles.value, { color: item.type === "entrada" ? "green" : "red" }]}>
+                            R$ {(Number(item.value) || 0).toFixed(2)}
+                        </Text>
+                    </View>
+                )}
+                ListEmptyComponent={() => (
+                    <Text style={{ textAlign: 'center', marginTop: 20, color: '#888' }}>
+                        Nenhuma transação registrada
+                    </Text>
+                )}
             />
-
-            <Text style={styles.back} onPress={() => navigation.navigate('Dashboard')}>Voltar</Text>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: 'white', padding: 20 },
-    title: { fontSize: 28, fontWeight: 'bold', color: 'black', textAlign: 'center', marginBottom: 20 },
-    item: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5f5f5', padding: 15, borderRadius: 20, marginBottom: 10 },
-    itemInfo: { marginLeft: 10 },
-    desc: { fontSize: 16, color: 'black' },
-    value: { fontSize: 18, fontWeight: 'bold', color: 'black' },
-    back: { marginTop: 10, textAlign: 'center', color: '#2196F3', textDecorationLine: 'underline' },
+    container: { flex: 1, padding: 20, backgroundColor: "#f4f4f4" },
+    title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
+    item: {
+        backgroundColor: "#fff",
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 12,
+        borderLeftWidth: 6
+    },
+    desc: { fontSize: 16, fontWeight: "bold" },
+    value: { fontSize: 16, marginTop: 5 }
 });

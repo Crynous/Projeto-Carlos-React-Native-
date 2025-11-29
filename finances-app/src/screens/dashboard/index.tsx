@@ -1,53 +1,107 @@
-import * as React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Card, Button, Icon } from '@rneui/themed';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../navigation/AppNavigator';
+// src/screens/dashboard/index.tsx
+import * as React from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useTransactions } from "../../context/TransactionContext";
+import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "../../context/AuthContext";
+import Feather from "react-native-vector-icons/Feather";
 
-type DashboardNavProp = NativeStackNavigationProp<RootStackParamList, 'Dashboard'>;
-
-export default function DashboardScreen() {
-    const navigation = useNavigation<DashboardNavProp>();
+export default function Dashboard() {
+    const { saldo, totalEntradas, totalSaidas } = useTransactions();
+    const { logout } = useAuth();
+    const navigation = useNavigation();
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Resumo Financeiro</Text>
 
-            <Card containerStyle={styles.card}>
-                <Text style={styles.label}>Saldo Atual</Text>
-                <Text style={styles.value}>R$ 5.230,00</Text>
-            </Card>
+            {/* header com log out  */}
+            <View style={styles.header}>
+                <Text style={styles.title}>Dashboard</Text>
 
-            <View style={styles.row}>
-                <Card containerStyle={styles.smallCard}>
-                    <Icon name="arrow-upward" />
-                    <Text style={styles.label}>Entradas</Text>
-                    <Text style={styles.valueSmall}>R$ 3.000</Text>
-                </Card>
-                <Card containerStyle={styles.smallCard}>
-                    <Icon name="arrow-downward" />
-                    <Text style={styles.label}>Saídas</Text>
-                    <Text style={styles.valueSmall}>R$ 1.200</Text>
-                </Card>
+                <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                    <Feather name="log-out" size={24} color="#e53935" />
+                </TouchableOpacity>
             </View>
 
-            <Button title="Adicionar Transação" icon={{ name: 'add', color: 'white' }} buttonStyle={styles.button} onPress={() => console.log('Funcionalidade Add transação (futuro)')} />
-            <Button title="Ver Histórico" icon={{ name: 'list', color: 'white' }} buttonStyle={[styles.button, { backgroundColor: '#4CAF50' }]} onPress={() => navigation.navigate('Transactions')} />
+            <View style={styles.card}>
+                <Text style={styles.label}>Saldo Atual</Text>
+                <Text style={styles.value}>R$ {saldo.toFixed(2)}</Text>
+            </View>
 
-            <Button title="Logout" type="clear" onPress={() => navigation.navigate('Login')} />
+            <View style={styles.row}>
+                <View style={styles.smallCard}>
+                    <Text style={styles.label}>Entradas</Text>
+                    <Text style={styles.valueSmall}>R$ {totalEntradas.toFixed(2)}</Text>
+                </View>
+
+                <View style={styles.smallCard}>
+                    <Text style={styles.label}>Saídas</Text>
+                    <Text style={styles.valueSmall}>R$ {totalSaidas.toFixed(2)}</Text>
+                </View>
+            </View>
+
+            <TouchableOpacity
+                onPress={() => navigation.navigate("AddTransaction" as never)}
+                style={styles.button}
+            >
+                <Text style={styles.buttonText}>Adicionar Transação</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                onPress={() => navigation.navigate("Transactions" as never)}
+                style={styles.button}
+            >
+                <Text style={styles.buttonText}>Ver Histórico</Text>
+            </TouchableOpacity>
+
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: 'white', alignItems: 'center', justifyContent: 'flex-start', padding: 20 },
-    title: { fontSize: 28, fontWeight: 'bold', color: 'black', marginVertical: 20 },
-    card: { width: '90%', borderRadius: 20, alignItems: 'center' },
-    label: { fontSize: 16, color: 'gray' },
-    value: { fontSize: 30, fontWeight: 'bold', color: 'black' },
-    valueSmall: { fontSize: 18, color: 'black' },
-    row: { flexDirection: 'row', justifyContent: 'space-between', width: '90%' },
-    smallCard: { flex: 1, alignItems: 'center', borderRadius: 20, marginHorizontal: 5 },
-    button: { borderRadius: 30, marginTop: 15, width: '90%', backgroundColor: '#2196F3' },
+    container: { flex: 1, padding: 20, backgroundColor: "#f4f4f4" },
+
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 20,
+    },
+
+    title: { fontSize: 24, fontWeight: "bold" },
+
+    logoutButton: {
+        padding: 5,
+    },
+
+    card: {
+        backgroundColor: "#fff",
+        padding: 20,
+        borderRadius: 10,
+        marginBottom: 20,
+    },
+    smallCard: {
+        backgroundColor: "#fff",
+        flex: 1,
+        padding: 15,
+        margin: 5,
+        borderRadius: 10,
+    },
+    row: { flexDirection: "row", justifyContent: "space-between" },
+    label: { fontSize: 16, color: "#555" },
+    value: { fontSize: 26, fontWeight: "bold", marginTop: 5 },
+    valueSmall: { fontSize: 20, fontWeight: "bold", marginTop: 5 },
+
+    button: {
+        backgroundColor: "#1e88e5",
+        padding: 15,
+        borderRadius: 10,
+        marginTop: 15,
+    },
+    buttonText: {
+        color: "#fff",
+        textAlign: "center",
+        fontSize: 16,
+        fontWeight: "bold",
+    },
 });

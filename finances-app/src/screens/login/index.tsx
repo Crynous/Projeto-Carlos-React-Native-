@@ -1,55 +1,97 @@
-import * as React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Input } from "@rneui/themed";
-import { Button } from '@rneui/base';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../navigation/AppNavigator';
+// src/screens/login/index.tsx
+import * as React from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "../../context/AuthContext";
+import { Formik } from "formik";
+import * as Yup from "yup";
 
-type LoginNavProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+const LoginSchema = Yup.object().shape({
+    email: Yup.string().email("E-mail inválido").required("Digite seu e-mail"),
+    password: Yup.string().min(6, "Mínimo 6 caracteres").required("Digite sua senha"),
+});
 
 export default function LoginScreen() {
-    const navigation = useNavigation<LoginNavProp>();
+    const navigation = useNavigation();
+    const { login } = useAuth();
+    const [error, setError] = React.useState("");
+
+    async function handleLogin(values: any) {
+        try {
+            setError("");
+            await login(values.email, values.password);
+            //navigation.navigate("Dashboard" as never);
+        } catch (err: any) {
+            setError(err.message);
+        }
+    }
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>APP TELA DE LOGIN - FINANCES</Text>
+            <Text style={styles.title}>FINANCES APP</Text>
 
-            <Input
-                placeholder='Digite seu email'
-                placeholderTextColor='gray'
-                leftIcon={{ name: 'person', color: 'black' }}
-                inputContainerStyle={styles.inputContainer}
-                inputStyle={styles.inputText}
-            />
+            {error ? <Text style={styles.error}>{error}</Text> : null}
 
-            <Input
-                placeholder="Digite sua senha"
-                placeholderTextColor='gray'
-                leftIcon={{ name: 'lock', color: 'black' }}
-                secureTextEntry
-                inputContainerStyle={styles.inputContainer}
-                inputStyle={styles.inputText}
-            />
+            <Formik
+                initialValues={{ email: "", password: "" }}
+                validationSchema={LoginSchema}
+                onSubmit={handleLogin}
+            >
+                {({ handleChange, handleSubmit, values, errors, touched }) => (
+                    <>
+                        <TextInput
+                            placeholder="E-mail"
+                            value={values.email}
+                            onChangeText={handleChange("email")}
+                            style={styles.input}
+                        />
+                        {touched.email && errors.email && (
+                            <Text style={styles.error}>{errors.email}</Text>
+                        )}
 
-            <Button
-                title="Logar"
-                buttonStyle={styles.button}
-                onPress={() => navigation.navigate('Dashboard')}
-            />
+                        <TextInput
+                            placeholder="Senha"
+                            secureTextEntry
+                            value={values.password}
+                            onChangeText={handleChange("password")}
+                            style={styles.input}
+                        />
+                        {touched.password && errors.password && (
+                            <Text style={styles.error}>{errors.password}</Text>
+                        )}
 
-            <Text style={styles.textLink} onPress={() => navigation.navigate('Register')}>
-                Não possui conta? Clique aqui para cadastrar!
-            </Text>
+                        <TouchableOpacity style={styles.button} onPress={() => handleSubmit()}>
+                            <Text style={styles.buttonText}>Login</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={() => navigation.navigate("Register" as never)}>
+                            <Text style={styles.link}>Criar conta</Text>
+                        </TouchableOpacity>
+                    </>
+                )}
+            </Formik>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', padding: 20 },
-    title: { color: 'black', fontSize: 28, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-    inputContainer: { backgroundColor: 'rgba(253,253,253,0.3)', borderRadius: 30, marginBottom: 10 },
-    inputText: { color: 'black', fontSize: 16 },
-    button: { borderRadius: 30, marginTop: 10, paddingHorizontal: 30, backgroundColor: '#2196F3' },
-    textLink: { fontSize: 15, color: 'gray', marginTop: 20, textDecorationLine: 'underline', textAlign: 'center' },
+    container: { flex: 1, justifyContent: "center", padding: 20 },
+    title: { fontSize: 28, fontWeight: "bold", marginBottom: 20, justifyContent: "center", textAlign: "center" },
+    input: {
+        width: "100%",
+        padding: 12,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderRadius: 6,
+    },
+    button: {
+        backgroundColor: "#2196f3",
+        padding: 15,
+        borderRadius: 6,
+        alignItems: "center",
+        marginTop: 10,
+    },
+    buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+    link: { textAlign: "center", marginTop: 15, color: "#2196f3" },
+    error: { color: "red", marginBottom: 10 },
 });

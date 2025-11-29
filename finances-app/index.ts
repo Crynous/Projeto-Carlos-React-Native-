@@ -1,3 +1,4 @@
+// finances-app/index.ts
 import { registerRootComponent } from 'expo';
 
 import App from './App';

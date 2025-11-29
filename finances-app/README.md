@@ -13,3 +13,6 @@ finances-app
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0" // Handling safe area insets
   },
+
+  //react-dom version must be the same as react version (testar) 
+
