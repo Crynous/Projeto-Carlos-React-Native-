@@ -8,17 +8,18 @@ import * as Yup from "yup";
 
 const TransactionSchema = Yup.object().shape({
     desc: Yup.string().required("Descrição é obrigatória"),
-    type: Yup.string().oneOf(["entrada", "saida"]).required("Tipo é obrigatório"),
     value: Yup.number().positive("Valor deve ser positivo").required("Valor é obrigatório"),
 });
 
 export default function AddTransaction() {
     const navigation = useNavigation();
     const { addTransaction } = useTransactions();
+    const [type, setType] = React.useState<"entrada" | "saida" | null>(null);
 
     async function handleAdd(values: any) {
         try {
-            await addTransaction(values.desc, values.type, Number(values.value));
+            if (!type) return;
+            await addTransaction(values.desc, type, Number(values.value));
             Alert.alert("Sucesso", "Transação adicionada!");
             navigation.goBack();
         } catch (err: any) {
@@ -26,16 +27,34 @@ export default function AddTransaction() {
         }
     }
 
+    if (!type) {
+        // Passo inicial: escolher tipo
+        return (
+            <View style={styles.container}>
+                <Text style={styles.title}>Escolha o tipo de transação</Text>
+                <View style={styles.typeContainer}>
+                    <TouchableOpacity style={[styles.typeButton, styles.typeEntrada]} onPress={() => setType("entrada")}>
+                        <Text style={styles.typeTextSelected}>Entrada</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.typeButton, styles.typeSaida]} onPress={() => setType("saida")}>
+                        <Text style={styles.typeTextSelected}>Saída</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    }
+
+    // Formulário principal
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Nova Transação</Text>
+            <Text style={styles.title}>{type === "entrada" ? "Nova Entrada" : "Nova Saída"}</Text>
 
             <Formik
-                initialValues={{ desc: "", type: "entrada", value: "" }}
+                initialValues={{ desc: "", value: "" }}
                 validationSchema={TransactionSchema}
                 onSubmit={handleAdd}
             >
-                {({ handleChange, handleSubmit, values, errors, touched, setFieldValue }) => (
+                {({ handleChange, handleSubmit, values, errors, touched }) => (
                     <>
                         <TextInput
                             placeholder="Descrição"
@@ -44,30 +63,6 @@ export default function AddTransaction() {
                             style={styles.input}
                         />
                         {touched.desc && errors.desc && <Text style={styles.error}>{errors.desc}</Text>}
-
-                        <View style={styles.typeContainer}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.typeButton,
-                                    values.type === "entrada" && styles.typeSelected,
-                                ]}
-                                onPress={() => setFieldValue("type", "entrada")}
-                            >
-                                <Text style={values.type === "entrada" ? styles.typeTextSelected : styles.typeText}>Entrada</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.typeButton,
-                                    values.type === "saida" && styles.typeSelected,
-                                ]}
-                                onPress={() => setFieldValue("type", "saida")}
-                            >
-                                <Text style={values.type === "saida" ? styles.typeTextSelected : styles.typeText}>Saída</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {touched.type && errors.type && <Text style={styles.error}>{errors.type}</Text>}
 
                         <TextInput
                             placeholder="Valor"
@@ -78,7 +73,7 @@ export default function AddTransaction() {
                         />
                         {touched.value && errors.value && <Text style={styles.error}>{errors.value}</Text>}
 
-                        <TouchableOpacity style={styles.button} onPress={() => handleSubmit()}>
+                        <TouchableOpacity style={[styles.button, type === "entrada" ? styles.typeEntrada : styles.typeSaida]} onPress={() => handleSubmit()}>
                             <Text style={styles.buttonText}>Adicionar</Text>
                         </TouchableOpacity>
                     </>
@@ -89,33 +84,67 @@ export default function AddTransaction() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, justifyContent: "center" },
-    title: { fontSize: 26, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
+    container: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: "#f9f9f9",
+        justifyContent: "center",
+    },
+    title: {
+        fontSize: 26,
+        fontWeight: "700",
+        marginBottom: 30,
+        textAlign: "center",
+        color: "#333",
+    },
     input: {
         width: "100%",
-        padding: 12,
-        marginBottom: 10,
+        padding: 14,
+        marginBottom: 15,
+        borderRadius: 10,
         borderWidth: 1,
-        borderRadius: 6,
+        borderColor: "#ddd",
+        backgroundColor: "#fff",
+        fontSize: 16,
     },
     button: {
-        backgroundColor: "#4caf50",
-        padding: 15,
-        borderRadius: 6,
+        paddingVertical: 16,
+        borderRadius: 10,
         alignItems: "center",
         marginTop: 10,
     },
-    buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
-    error: { color: "red", marginBottom: 10 },
-    typeContainer: { flexDirection: "row", justifyContent: "space-around", marginBottom: 10 },
-    typeButton: {
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 6,
-        borderWidth: 1,
-        borderColor: "#ccc",
+    buttonText: {
+        color: "#fff",
+        fontWeight: "700",
+        fontSize: 16,
     },
-    typeSelected: { backgroundColor: "#4caf50", borderColor: "#4caf50" },
-    typeText: { color: "#000", fontWeight: "bold" },
-    typeTextSelected: { color: "#fff", fontWeight: "bold" },
+    error: {
+        color: "#e53935",
+        marginBottom: 10,
+        marginLeft: 4,
+        fontSize: 13,
+    },
+    typeContainer: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+    },
+    typeButton: {
+        flex: 1,
+        paddingVertical: 20,
+        borderRadius: 10,
+        marginHorizontal: 10,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    typeEntrada: {
+        backgroundColor: "#26a69a",
+    },
+    typeSaida: {
+        backgroundColor: "#e53935",
+    },
+    typeTextSelected: {
+        color: "#fff",
+        fontWeight: "700",
+        fontSize: 18,
+    },
 });

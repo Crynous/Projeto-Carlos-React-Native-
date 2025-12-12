@@ -39,7 +39,7 @@ export const TransactionProvider = ({ children }: { children: React.ReactNode })
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  // 🔥 Ouve as transações em tempo real
+  // Acessa as transações em tempo real
   useEffect(() => {
     if (!user) return;
 
@@ -83,7 +83,7 @@ export const TransactionProvider = ({ children }: { children: React.ReactNode })
     await deleteDoc(ref);
   }
 
-  // 🔢 Cálculos seguros (nunca retornam undefined)
+  // Cálculos seguros (nunca retornam undefined)
   const totalEntradas = transactions
     .filter((t) => t.type === "entrada")
     .reduce((acc, item) => acc + Number(item.value || 0), 0);
